@@ -29,19 +29,32 @@ async function bootstrap() {
   /* ----------------------------------------
    * 4️⃣ CORS (ENV-BASED)
    * ---------------------------------------- */
-  const corsOrigins =
-    configService.get<string>('CORS_ORIGINS')?.split(',') || [
-      'http://localhost:3000',
-      'http://localhost:5173',
-      'https://shophere-frontend.onrender.com'
-    ];
+  const corsOriginsEnv = configService.get<string>('CORS_ORIGINS');
 
+  const corsOrigins = corsOriginsEnv
+    ? corsOriginsEnv.split(',').map(o => o.trim())
+    : [
+        'http://localhost:3000',
+        'http://localhost:5173'
+      ];
+  
   app.enableCors({
-    origin: corsOrigins,
+    origin: (origin, callback) => {
+      // Allow server-to-server & tools like curl/postman
+      if (!origin) return callback(null, true);
+  
+      if (corsOrigins.includes(origin)) {
+        return callback(null, true);
+      }
+  
+      console.error('❌ Blocked by CORS:', origin);
+      callback(new Error('Not allowed by CORS'));
+    },
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization', 'Content-Disposition'],
   });
+
 
   /* ----------------------------------------
    * 5️⃣ RATE LIMITING (SAFE FOR RENDER)
