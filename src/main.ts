@@ -29,24 +29,9 @@ async function bootstrap() {
   /* ----------------------------------------
    * 4️⃣ CORS (RENDER + BROWSER SAFE)
    * ---------------------------------------- */
-  const allowedOrigins = [
-    'https://shophere-frontend.onrender.com',
-    'http://localhost:5173',
-    'http://localhost:3000',
-  ];
 
   app.enableCors({
-    origin: (origin, callback) => {
-      // Allow server-to-server, Postman, curl
-      if (!origin) return callback(null, true);
-
-      if (allowedOrigins.includes(origin)) {
-        return callback(null, true);
-      }
-
-      console.error('❌ CORS blocked:', origin);
-      callback(new Error('Not allowed by CORS'));
-    },
+    origin: 'https://shophere-frontend.onrender.com',
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization', 'Content-Disposition'],
