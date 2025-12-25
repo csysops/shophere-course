@@ -1,38 +1,54 @@
-# 1. Build Stage
+########################################
+# 1️⃣ BUILD STAGE
+########################################
 FROM node:20-alpine AS builder
 
 WORKDIR /app
 
-# Copy package files and install dependencies
+# Install required system deps for Prisma
+RUN apk add --no-cache openssl
+
+# Copy package files
 COPY package*.json ./
 COPY prisma ./prisma/
 
-# Install dependencies (including devDependencies for build)
+# Install ALL dependencies (build needs devDeps)
 RUN npm install
 
-# Copy entire source code
+# Copy source code
 COPY . .
 
 # Generate Prisma Client
 RUN npx prisma generate
 
-# Build NestJS application (creates dist directory)
+# Build NestJS
 RUN npm run build
 
-# 2. Production Run Stage (Lighter, more secure)
+########################################
+# 2️⃣ PRODUCTION STAGE
+########################################
 FROM node:20-alpine
 
 WORKDIR /app
 
-# Copy dependencies from builder (or reinstall only production deps for lighter image)
-COPY --from=builder /app/node_modules ./node_modules
+# Install runtime dependencies for Prisma
+RUN apk add --no-cache openssl
+
+# Set production environment
+ENV NODE_ENV=production
+
+# Copy only what is needed
 COPY --from=builder /app/package*.json ./
+COPY --from=builder /app/node_modules ./node_modules
 COPY --from=builder /app/dist ./dist
 COPY --from=builder /app/prisma ./prisma
 COPY --from=builder /app/templates ./templates
 
-# Expose port 3000
+# Prisma needs this at runtime
+RUN npx prisma generate
+
+# Expose Render port
 EXPOSE 3000
 
-# Command to run the application
-CMD [ "npm", "run", "start:prod" ]
+# Start NestJS directly
+CMD ["node", "dist/main.js"]
