@@ -1,6 +1,5 @@
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
-import { MicroserviceOptions, Transport } from '@nestjs/microservices';
 import { NestExpressApplication } from '@nestjs/platform-express';
 import { join } from 'path';
 import rateLimit from 'express-rate-limit';
@@ -87,27 +86,7 @@ async function bootstrap() {
   );
 
   /* ----------------------------------------
-   * 6️⃣ RABBITMQ (CLOUDAMQP)
-   * ---------------------------------------- */
-  const rabbitUrl = configService.get<string>('RABBITMQ_URL');
-
-  if (rabbitUrl) {
-    app.connectMicroservice<MicroserviceOptions>({
-      transport: Transport.RMQ,
-      options: {
-        urls: [rabbitUrl],
-        queue: configService.get<string>('RABBITMQ_QUEUE', 'shopsphere_queue'),
-        queueOptions: {
-          durable: true,
-        },
-      },
-    });
-
-    await app.startAllMicroservices();
-  }
-
-  /* ----------------------------------------
-   * 7️⃣ START SERVER (RENDER PORT)
+   * 6️⃣ START SERVER (RENDER PORT)
    * ---------------------------------------- */
   const port = process.env.PORT || 3000;
   await app.listen(port);
