@@ -1,0 +1,165 @@
+version: '3.8'
+
+services:
+  # 1. Nginx Load Balancer
+  nginx:
+    image: nginx:alpine
+    container_name: shopsphere-nginx
+    restart: always
+    ports:
+      - "80:80"
+      - "443:443"  # For future SSL support
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - nginx_logs:/var/log/nginx
+    depends_on:
+      - api1
+      - api2
+      - api3
+    networks:
+      - shop-network
+    healthcheck:
+      test: [ "CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost/health" ]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+
+  # 2. Backend NestJS API - Instance 1
+  api1:
+    build: .
+    container_name: shopsphere-api-1
+    restart: always
+    expose:
+      - "3000"
+    environment:
+      - DATABASE_URL=postgresql://shopsphere_user:postgres123@postgres:5432/shopsphere_db?schema=public&connection_limit=30&pool_timeout=20
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - RABBITMQ_URL=amqp://admin:admin@rabbitmq:5672
+      - NODE_ENV=production
+      - INSTANCE_ID=1
+    depends_on:
+      - postgres
+      - redis
+      - rabbitmq
+    networks:
+      - shop-network
+    healthcheck:
+      test: [ "CMD-SHELL", "wget --quiet --tries=1 --spider http://localhost:3000/api/health || exit 1" ]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 40s
+
+  # 3. Backend NestJS API - Instance 2
+  api2:
+    build: .
+    container_name: shopsphere-api-2
+    restart: always
+    expose:
+      - "3000"
+    environment:
+      - DATABASE_URL=postgresql://shopsphere_user:postgres123@postgres:5432/shopsphere_db?schema=public&connection_limit=30&pool_timeout=20
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - RABBITMQ_URL=amqp://admin:admin@rabbitmq:5672
+      - NODE_ENV=production
+      - INSTANCE_ID=2
+    depends_on:
+      - postgres
+      - redis
+      - rabbitmq
+    networks:
+      - shop-network
+    healthcheck:
+      test: [ "CMD-SHELL", "wget --quiet --tries=1 --spider http://localhost:3000/api/health || exit 1" ]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 40s
+
+  # 4. Backend NestJS API - Instance 3
+  api3:
+    build: .
+    container_name: shopsphere-api-3
+    restart: always
+    expose:
+      - "3000"
+    environment:
+      - DATABASE_URL=postgresql://shopsphere_user:postgres123@postgres:5432/shopsphere_db?schema=public&connection_limit=30&pool_timeout=20
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - RABBITMQ_URL=amqp://admin:admin@rabbitmq:5672
+      - NODE_ENV=production
+      - INSTANCE_ID=3
+    depends_on:
+      - postgres
+      - redis
+      - rabbitmq
+    networks:
+      - shop-network
+    healthcheck:
+      test: [ "CMD-SHELL", "wget --quiet --tries=1 --spider http://localhost:3000/api/health || exit 1" ]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 40s
+
+  # 2. Database PostgreSQL
+  postgres:
+    image: postgres:15
+    container_name: shopsphere-postgres
+    restart: always
+    environment:
+      POSTGRES_USER: shopsphere_user
+      POSTGRES_PASSWORD: postgres123
+      POSTGRES_DB: shopsphere_db
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - shop-network
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U shopsphere_user" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # 3. Redis Cache
+  redis:
+    image: redis:7-alpine
+    container_name: shopsphere-redis
+    restart: always
+    networks:
+      - shop-network
+    healthcheck:
+      test: [ "CMD", "redis-cli", "ping" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # 4. RabbitMQ Message Broker
+  rabbitmq:
+    image: rabbitmq:3-management-alpine
+    container_name: shopsphere-rabbitmq
+    restart: always
+    ports:
+      - "15672:15672" # Management UI
+      - "5672:5672" # AMQP port
+    environment:
+      RABBITMQ_DEFAULT_USER: admin
+      RABBITMQ_DEFAULT_PASS: admin
+    networks:
+      - shop-network
+    healthcheck:
+      test: [ "CMD", "rabbitmq-diagnostics", "-q", "ping" ]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+
+networks:
+  shop-network:
+    driver: bridge
+
+volumes:
+  postgres_data:
+  nginx_logs:

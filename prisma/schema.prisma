@@ -1,0 +1,175 @@
+// prisma/schema.prisma
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  ADMIN
+  CUSTOMER
+}
+
+model User {
+  id               String    @id @default(uuid())
+  email            String    @unique
+  passwordHash     String?   // Optional now (Keycloak users may not have password)
+  keycloakId       String?   @unique // 👈 NEW: Keycloak user ID (sub claim)
+  firstName        String?
+  lastName         String?
+  avatar           String?   // Profile avatar URL
+  hashedRefreshToken String?   @unique 
+  role             Role      @default(CUSTOMER)
+  isVerified       Boolean   @default(false)
+  verificationCode String?   @unique
+  resetPasswordCode String?   @unique // 👈 NEW: Password reset code
+  resetPasswordExpiresAt DateTime? // 👈 NEW: Password reset expiration
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
+  deletedAt        DateTime?
+  orders           Order[]
+  carts            Cart[]
+  reviews          Review[]
+  
+  @@index([keycloakId])
+}
+
+model Category {
+  id        String    @id @default(uuid())
+  name      String    @unique
+  slug      String    @unique
+  products  Product[]
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
+}
+
+model Product {
+  id          String     @id @default(uuid())
+  name        String
+  description String?
+  price       Decimal    @db.Decimal(10, 2)
+  sku         String     @unique
+  imageUrl    String?
+  categoryId  String
+  category    Category   @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+  inventory   Inventory?
+  cartItems   CartItem[]
+  orderItems  OrderItem[]
+  reviews     Review[]
+  ratingRate  Float?     @default(0)
+  ratingCount Int?       @default(0)
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+  deletedAt   DateTime?
+  @@index([name])
+}
+
+model Inventory {
+  productId String   @id @unique
+  product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  quantity  Int      @default(0)
+  updatedAt DateTime @updatedAt
+}
+
+// MỚI: Dùng cho Saga (theo tài liệu Holy_Dev)
+enum OrderStatus {
+  PENDING
+  COMPLETED
+  CANCELLED
+}
+
+// MỚI: Bảng Order (cho Saga) - Refactored for multiple items
+model Order {
+  id        String      @id @default(uuid())
+  userId    String
+  user      User        @relation(fields: [userId], references: [id])
+  status    OrderStatus @default(PENDING)
+  total     Decimal     @db.Decimal(10, 2)
+  
+  items     OrderItem[]
+
+  createdAt DateTime    @default(now())
+  updatedAt DateTime    @updatedAt
+  
+  @@index([userId])
+}
+
+model OrderItem {
+  id        String   @id @default(uuid())
+  orderId   String
+  order     Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  productId String
+  product   Product  @relation(fields: [productId], references: [id])
+  quantity  Int
+  price     Decimal  @db.Decimal(10, 2) // Snapshot of price at time of order
+
+  @@index([orderId])
+  @@index([productId])
+}
+
+// MỚI: Bảng Outbox (cho Submission 3)
+model OutboxEvent {
+  id          String   @id @default(uuid())
+  eventName   String   // Tên của sự kiện, vd: "OrderCreatedEvent"
+  payload     Json     // Dữ liệu JSON của sự kiện
+  createdAt   DateTime @default(now())
+  
+  // Dùng để theo dõi xem sự kiện đã được gửi chưa
+  processedAt DateTime?
+  
+  @@index([processedAt])
+}
+
+model ProcessedEvent {
+  id        String   @id @unique // Chúng ta sẽ dùng ID của sự kiện (Event ID)
+  createdAt DateTime @default(now())
+}
+
+// Cart System
+model Cart {
+  id        String     @id @default(uuid())
+  userId    String     @unique // One cart per user
+  user      User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  cartItems CartItem[]
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
+  
+  @@index([userId])
+}
+
+model CartItem {
+  id        String   @id @default(uuid())
+  cartId    String
+  cart      Cart     @relation(fields: [cartId], references: [id], onDelete: Cascade)
+  productId String
+  product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  quantity  Int      @default(1)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  
+  @@unique([cartId, productId]) // One product per cart only once
+  @@index([cartId])
+  @@index([productId])
+}
+
+// Review System
+model Review {
+  id        String   @id @default(uuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  productId String
+  product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  rating    Float    // 1-5 stars
+  comment   String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  
+  @@unique([userId, productId]) // One review per user per product
+  @@index([productId])
+  @@index([userId])
+}

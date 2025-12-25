@@ -1,0 +1,12 @@
+diff --git a/node_modules/@nestjs/schedule/dist/scheduler.orchestrator.js b/node_modules/@nestjs/schedule/dist/scheduler.orchestrator.js
+index c4e11b4..edaa6dc 100644
+--- a/node_modules/@nestjs/schedule/dist/scheduler.orchestrator.js
++++ b/node_modules/@nestjs/schedule/dist/scheduler.orchestrator.js
+@@ -13,6 +13,7 @@ exports.SchedulerOrchestrator = void 0;
+ const common_1 = require("@nestjs/common");
+ const cron_1 = require("cron");
+ const scheduler_registry_1 = require("./scheduler.registry");
++const crypto = require("crypto");
+ let SchedulerOrchestrator = class SchedulerOrchestrator {
+     constructor(schedulerRegistry) {
+         this.schedulerRegistry = schedulerRegistry;
