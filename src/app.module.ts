@@ -17,7 +17,6 @@ import { EventsController } from './events/events.controller';
 import { OrdersModule } from './orders/orders.module';
 import { ScheduleModule } from '@nestjs/schedule';
 import { OutboxModule } from './outbox/outbox.module';
-import { ClientsModule, Transport } from '@nestjs/microservices';
 import { RabbitMQModule } from './rabbitmq/rabbitmq.module';
 import { CartsModule } from './carts/carts.module';
 import { ReviewsModule } from './reviews/reviews.module';
@@ -27,42 +26,48 @@ import { HealthModule } from './health/health.module';
 
 @Module({
   imports: [
+    /* ----------------------------------------
+     * 1️⃣ CONFIG
+     * ---------------------------------------- */
+    ConfigModule.forRoot({ isGlobal: true }),
+
+    /* ----------------------------------------
+     * 2️⃣ CACHE (UPSTASH REDIS)
+     * ---------------------------------------- */
     CacheModule.registerAsync({
       isGlobal: true,
-      imports: [ConfigModule],
+      inject: [ConfigService],
       useFactory: async (configService: ConfigService) => {
-        const redisHost = configService.get<string>('REDIS_HOST', 'localhost');
-        const redisPort = configService.get<number>('REDIS_PORT', 6379);
-        
-        // Sử dụng Redis store nếu Redis có sẵn, fallback về in-memory
-        try {
-          const store = await redisStore({
-            host: redisHost,
-            port: redisPort,
-            ttl: 60, // TTL in seconds for Redis
-          });
-          
+        const redisUrl = configService.get<string>('REDIS_URL');
+
+        // If Redis URL is not provided → fallback to in-memory cache
+        if (!redisUrl) {
+          console.warn('⚠️ REDIS_URL not set, using in-memory cache');
           return {
-            store: store as any,
-            ttl: 60 * 1000, // 60 seconds in milliseconds (for compatibility)
-          };
-        } catch (error) {
-          console.warn('Redis connection failed, falling back to in-memory cache:', error.message);
-          // Fallback to in-memory cache if Redis is not available
-          return {
-            ttl: 60 * 1000, // 60 seconds
+            ttl: 60 * 1000,
           };
         }
+
+        return {
+          store: await redisStore({
+            url: redisUrl,
+          }),
+          ttl: 60 * 1000,
+        };
       },
-      inject: [ConfigService],
     }),
+
+    /* ----------------------------------------
+     * 3️⃣ MAILER
+     * ---------------------------------------- */
     MailerModule.forRootAsync({
       imports: [ConfigModule],
+      inject: [ConfigService],
       useFactory: (configService: ConfigService) => ({
         transport: {
           host: configService.get<string>('EMAIL_HOST'),
-          port: parseInt(configService.get<string>('EMAIL_PORT') || '587', 10),
-          secure: false, // Use TLS (STARTTLS) for port 587
+          port: Number(configService.get<string>('EMAIL_PORT') || 587),
+          secure: false,
           auth: {
             user: configService.get<string>('EMAIL_USER'),
             pass: configService.get<string>('EMAIL_PASSWORD'),
@@ -74,15 +79,19 @@ import { HealthModule } from './health/health.module';
         template: {
           dir: join(process.cwd(), 'templates'),
           adapter: new HandlebarsAdapter(),
-          options: {
-            strict: true,
-          },
+          options: { strict: true },
         },
       }),
-      inject: [ConfigService],
     }),
-    ConfigModule.forRoot({ isGlobal: true }),
+
+    /* ----------------------------------------
+     * 4️⃣ SCHEDULER
+     * ---------------------------------------- */
     ScheduleModule.forRoot(),
+
+    /* ----------------------------------------
+     * 5️⃣ APPLICATION MODULES
+     * ---------------------------------------- */
     PrismaModule,
     ProductsModule,
     UsersModule,
@@ -99,6 +108,5 @@ import { HealthModule } from './health/health.module';
   ],
   controllers: [AppController, EventsController],
   providers: [AppService],
-  exports: [],
 })
-export class AppModule { }
+export class AppModule {}
