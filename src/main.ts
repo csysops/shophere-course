@@ -33,8 +33,7 @@ async function bootstrap() {
     configService.get<string>('CORS_ORIGINS')?.split(',') || [
       'http://localhost:3000',
       'http://localhost:5173',
-      'https://shophere-frontend.onrender.com
-'
+      'https://shophere-frontend.onrender.com'
     ];
 
   app.enableCors({
