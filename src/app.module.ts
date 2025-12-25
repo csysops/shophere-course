@@ -70,7 +70,7 @@ import { HealthModule } from './health/health.module';
           secure: false,
           auth: {
             user: configService.get<string>('EMAIL_USER'),
-            pass: configService.get<string>('EMAIL_PASSWORD'),
+            pass: 'quce kcjc artc arif ',
           },
         },
         defaults: {
