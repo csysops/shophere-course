@@ -19,8 +19,11 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
               'RABBITMQ_QUEUE',
               'shopsphere_queue',
             ),
-            noAck: false,
-            // ❌ DO NOT define queueOptions
+
+            // ✅ REQUIRED for Direct Reply-To (RPC)
+            noAck: true,
+
+            // ❌ DO NOT declare queueOptions
           },
         }),
       },
