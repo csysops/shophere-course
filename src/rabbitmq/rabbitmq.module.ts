@@ -1,24 +1,30 @@
 // src/rabbitmq/rabbitmq.module.ts
 import { Global, Module } from '@nestjs/common';
 import { ClientsModule, Transport } from '@nestjs/microservices';
+import { ConfigModule, ConfigService } from '@nestjs/config';
 
-@Global() // 👈 Make this module Global
+@Global()
 @Module({
   imports: [
-    ClientsModule.register([
+    ConfigModule, // 👈 required to read env vars
+    ClientsModule.registerAsync([
       {
         name: 'RABBITMQ_SERVICE',
-        transport: Transport.RMQ,
-        options: {
-          urls: ['amqp://localhost:5672'],
-          queue: 'shopsphere_queue',
-          queueOptions: {
-            durable: false,
+        inject: [ConfigService],
+        useFactory: (configService: ConfigService) => ({
+          transport: Transport.RMQ,
+          options: {
+            urls: [configService.get<string>('RABBITMQ_URL')!],
+            queue: configService.get<string>('RABBITMQ_QUEUE', 'shopsphere_queue'),
+            noAck: false,
+            queueOptions: {
+              durable: false, // CloudAMQP default
+            },
           },
-        },
+        }),
       },
     ]),
   ],
-  exports: [ClientsModule], // 👈 Export the ClientsModule
+  exports: [ClientsModule],
 })
 export class RabbitMQModule {}
