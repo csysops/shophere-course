@@ -10,7 +10,7 @@ async function bootstrap() {
   const configService = app.get(ConfigService);
 
   /* ----------------------------------------
-   * 1️⃣ REQUIRED FOR RENDER (TRUST PROXY)
+   * 1️⃣ TRUST PROXY (REQUIRED FOR RENDER)
    * ---------------------------------------- */
   app.set('trust proxy', 1);
 
@@ -27,27 +27,24 @@ async function bootstrap() {
   app.setGlobalPrefix('api');
 
   /* ----------------------------------------
-   * 4️⃣ CORS (ENV-BASED)
+   * 4️⃣ CORS (RENDER + BROWSER SAFE)
    * ---------------------------------------- */
-  const corsOriginsEnv = configService.get<string>('CORS_ORIGINS');
+  const allowedOrigins = [
+    'https://shophere-frontend.onrender.com',
+    'http://localhost:5173',
+    'http://localhost:3000',
+  ];
 
-  const corsOrigins = corsOriginsEnv
-    ? corsOriginsEnv.split(',').map(o => o.trim())
-    : [
-        'http://localhost:3000',
-        'http://localhost:5173'
-      ];
-  
   app.enableCors({
     origin: (origin, callback) => {
-      // Allow server-to-server & tools like curl/postman
+      // Allow server-to-server, Postman, curl
       if (!origin) return callback(null, true);
-  
-      if (corsOrigins.includes(origin)) {
+
+      if (allowedOrigins.includes(origin)) {
         return callback(null, true);
       }
-  
-      console.error('❌ Blocked by CORS:', origin);
+
+      console.error('❌ CORS blocked:', origin);
       callback(new Error('Not allowed by CORS'));
     },
     credentials: true,
@@ -55,9 +52,28 @@ async function bootstrap() {
     allowedHeaders: ['Content-Type', 'Authorization', 'Content-Disposition'],
   });
 
+  /* ----------------------------------------
+   * 5️⃣ HANDLE OPTIONS BEFORE RATE LIMIT
+   * ---------------------------------------- */
+  app.use((req, res, next) => {
+    if (req.method === 'OPTIONS') {
+      res.header('Access-Control-Allow-Origin', req.headers.origin || '*');
+      res.header(
+        'Access-Control-Allow-Methods',
+        'GET,POST,PUT,PATCH,DELETE,OPTIONS',
+      );
+      res.header(
+        'Access-Control-Allow-Headers',
+        'Content-Type, Authorization, Content-Disposition',
+      );
+      res.header('Access-Control-Allow-Credentials', 'true');
+      return res.sendStatus(204);
+    }
+    next();
+  });
 
   /* ----------------------------------------
-   * 5️⃣ RATE LIMITING (SAFE FOR RENDER)
+   * 6️⃣ RATE LIMITING (SAFE)
    * ---------------------------------------- */
   const globalLimiter = rateLimit({
     windowMs: 15 * 60 * 1000,
@@ -65,7 +81,9 @@ async function bootstrap() {
     standardHeaders: true,
     legacyHeaders: false,
     skip: (req) =>
-      req.path === '/api/health' || req.path === '/health',
+      req.method === 'OPTIONS' ||
+      req.path === '/api/health' ||
+      req.path === '/health',
   });
 
   const authLimiter = rateLimit({
@@ -100,7 +118,7 @@ async function bootstrap() {
   );
 
   /* ----------------------------------------
-   * 6️⃣ START SERVER (RENDER PORT)
+   * 7️⃣ START SERVER
    * ---------------------------------------- */
   const port = process.env.PORT || 3000;
   await app.listen(port);
