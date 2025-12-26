@@ -31,7 +31,9 @@ async function bootstrap() {
    * ---------------------------------------- */
 
   app.enableCors({
-    origin: true,
+    origin: [
+      'https://shophere-frontend.onrender.com'
+    ],
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization', 'Content-Disposition'],
