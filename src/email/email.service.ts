@@ -30,7 +30,7 @@ export class EmailService {
     // });
     await this.resend.emails.send({
           from: 'Acme <onboarding@resend.dev>',
-          to: [user.email],
+          to: ['phamtan8312@gmail.com'],
           subject: 'Verify your email',
           html: '<p>it works!</p>',
           });
