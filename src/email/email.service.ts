@@ -16,17 +16,24 @@ export class EmailService {
   async sendUserVerification(user: User, code: string) {
     console.log('📨 Sending verification email via Resend');
 
-    await this.resend.emails.send({
-      from: this.configService.get('EMAIL_FROM')!,
-      to: user.email,
-      subject: 'Verify your email',
-      html: `
-        <h2>Welcome to ShopSphere</h2>
-        <p>Click the link below to verify your email:</p>
-        <a href="https://shophere-frontend.onrender.com/verify-email?code=${code}">
-          Verify Email
-        </a>
-      `,
+    // await this.resend.emails.send({
+    //   from: this.configService.get('EMAIL_FROM')!,
+    //   to: user.email,
+    //   subject: 'Verify your email',
+    //   html: `
+    //     <h2>Welcome to ShopSphere</h2>
+    //     <p>Click the link below to verify your email:</p>
+    //     <a href="https://shophere-frontend.onrender.com/verify-email?code=${code}">
+    //       Verify Email
+    //     </a>
+    //   `,
+      await resend.emails.send({
+          from: 'Acme <onboarding@resend.dev>',
+          to: ['dat.pt204@gmail.com'],
+          subject: 'hello world',
+          html: '<p>it works!</p>',
+          });
+    
     });
 
     console.log('✅ Verification email sent');
@@ -46,3 +53,4 @@ export class EmailService {
     });
   }
 }
+
