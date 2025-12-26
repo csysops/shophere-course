@@ -8,16 +8,22 @@ export class EmailService {
 
   // Gửi email xác thực
   async sendUserVerification(user: User, code: string) {
-    await this.mailerService.sendMail({
-      to: user.email,
-      subject: 'Chào mừng đến ShopSphere! Xác thực Email của bạn',
-      template: './verify', 
-      context: {
-        name: user.email, 
-        activationCode: code,
-      },
-    });
-  }
+  console.log('📨 [EmailService] sendUserVerification called');
+  console.log('📨 To:', user.email);
+
+  await this.mailerService.sendMail({
+    to: user.email,
+    subject: 'Verify email',
+    template: './verify',
+    context: {
+      name: user.email,
+      activationCode: code,
+    },
+  });
+
+  console.log('📨 MailerService.sendMail finished');
+}
+
 
   // Gửi email đặt lại mật khẩu
   async sendPasswordReset(user: User, resetCode: string) {
@@ -31,4 +37,5 @@ export class EmailService {
       },
     });
   }
+
 }
