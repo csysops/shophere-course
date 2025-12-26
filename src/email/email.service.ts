@@ -10,16 +10,20 @@ export class EmailService {
   async sendUserVerification(user: User, code: string) {
   console.log('📨 [EmailService] sendUserVerification called');
   console.log('📨 To:', user.email);
-
   await this.mailerService.sendMail({
     to: user.email,
     subject: 'Verify email',
-    template: './verify',
-    context: {
-      name: user.email,
-      activationCode: code,
-    },
+    text: `Your verification code is: ${code}`,
   });
+  // await this.mailerService.sendMail({
+  //   to: user.email,
+  //   subject: 'Verify email',
+  //   template: './verify',
+  //   context: {
+  //     name: user.email,
+  //     activationCode: code,
+  //   },
+  // });
 
   console.log('📨 MailerService.sendMail finished');
 }
@@ -39,3 +43,4 @@ export class EmailService {
   }
 
 }
+
