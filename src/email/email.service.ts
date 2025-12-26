@@ -16,7 +16,7 @@ export class EmailService {
 
   async sendUserVerification(user: User, code: string) {
     await this.resend.emails.send({
-      from: 'ShopSphere <onboarding@resend.dev>',
+      from: 'ShopSphere <noreply@csysops.dev>',
       to: user.email,
       subject: 'Verify your email',
       html: `
@@ -33,7 +33,7 @@ export class EmailService {
 
   async sendPasswordReset(user: User, resetCode: string) {
     await this.resend.emails.send({
-      from: 'ShopSphere <onboarding@resend.dev>',
+      from: 'ShopSphere <noreply@csysops.dev>',
       to: user.email,
       subject: 'Reset your password',
       html: `
