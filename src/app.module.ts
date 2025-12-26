@@ -60,31 +60,32 @@ import { HealthModule } from './health/health.module';
     /* ----------------------------------------
      * 3️⃣ MAILER
      * ---------------------------------------- */
-    MailerModule.forRootAsync({
-  imports: [ConfigModule],
-  useFactory: (configService: ConfigService) => ({
-    transport: {
-      host: configService.get('EMAIL_HOST'),
-      port: Number(configService.get('EMAIL_PORT')),
-      secure: false,
-      auth: {
-        user: configService.get('EMAIL_USER'),
-        pass: configService.get('EMAIL_PASSWORD'),
-      },
-    },
-    defaults: {
-      from: `"ShopSphere" <${configService.get('EMAIL_USER')}>`,
-    },
-    template: {
-      dir: join(process.cwd(), 'templates'), // ✅ SINGLE SOURCE
-      adapter: new HandlebarsAdapter(),
-      options: {
-        strict: true,
-      },
-    },
-  }),
-  inject: [ConfigService],
-});
+      MailerModule.forRootAsync({
+      imports: [ConfigModule],
+      useFactory: (configService: ConfigService) => ({
+        transport: {
+          host: configService.get('EMAIL_HOST'),
+          port: Number(configService.get('EMAIL_PORT')),
+          secure: false,
+          auth: {
+            user: configService.get('EMAIL_USER'),
+            pass: configService.get('EMAIL_PASSWORD'),
+          },
+        },
+        defaults: {
+          from: `"ShopSphere" <${configService.get('EMAIL_USER')}>`,
+        },
+        template: {
+          dir: join(process.cwd(), 'templates'), // ✅ SINGLE SOURCE
+          adapter: new HandlebarsAdapter(),
+          options: {
+            strict: true,
+          },
+        },
+      }),
+      inject: [ConfigService],
+    }),
+
 
 
     
