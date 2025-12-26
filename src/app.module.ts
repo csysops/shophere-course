@@ -86,31 +86,7 @@ import { HealthModule } from './health/health.module';
     //   inject: [ConfigService],
     // }),
 
-    MailerModule.forRootAsync({
-      imports: [ConfigModule],
-      useFactory: (configService: ConfigService) => ({
-        transport: {
-          host: configService.get<string>('EMAIL_HOST'),
-          port: parseInt(configService.get<string>('EMAIL_PORT') || '587', 10),
-          secure: false, // Use TLS (STARTTLS) for port 587
-          auth: {
-            user: configService.get<string>('EMAIL_USER'),
-            pass: configService.get<string>('EMAIL_PASSWORD'),
-          },
-        },
-        defaults: {
-          from: `"ShopSphere" <${configService.get<string>('EMAIL_USER')}>`,
-        },
-        template: {
-          dir: join(process.cwd(), 'templates'),
-          adapter: new HandlebarsAdapter(),
-          options: {
-            strict: true,
-          },
-        },
-      }),
-      inject: [ConfigService],
-    }),
+
 
     
     /* ----------------------------------------
