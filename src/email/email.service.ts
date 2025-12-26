@@ -13,10 +13,7 @@ export class EmailService {
   console.log('📨 [EmailService] sendUserVerification called');
   console.log('📨 To:', user.email);
 
-    console.log(
-  '📂 Template dir exists:',
-  fs.existsSync(join(process.cwd(), 'templates')),
-);
+    console.log('📂 Template dir exists:', fs.existsSync(join(process.cwd(), 'templates')),);
   await this.mailerService.sendMail({
     to: user.email,
     subject: 'Verify email',
@@ -69,6 +66,7 @@ export class EmailService {
   }
 
 }
+
 
 
 
