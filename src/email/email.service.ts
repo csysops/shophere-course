@@ -27,16 +27,17 @@ export class EmailService {
 // }
 
 async sendUserVerification(user: User, code: string) {
-  const templatePath = join(
-    process.cwd(),
-    'dist',
-    'email',
-    'templates',
-    'verify.hbs',
-  );
+  const pathsToCheck = [
+    join(process.cwd(), 'dist', 'email', 'templates', 'verify.hbs'),
+    join(process.cwd(), 'templates', 'verify.hbs'),
+    join(process.cwd(), 'dist', 'templates', 'verify.hbs'),
+  ];
 
-  console.log('📁 Checking template path:', templatePath);
-  console.log('📁 Exists?', fs.existsSync(templatePath));
+  console.log('🔍 CWD:', process.cwd());
+
+  for (const p of pathsToCheck) {
+    console.log(`🔍 Checking ${p} →`, fs.existsSync(p));
+  }
 
   await this.mailerService.sendMail({
     to: user.email,
@@ -47,6 +48,8 @@ async sendUserVerification(user: User, code: string) {
       activationCode: code,
     },
   });
+
+  console.log('✅ sendMail finished');
 }
   // Gửi email đặt lại mật khẩu
   async sendPasswordReset(user: User, resetCode: string) {
@@ -62,5 +65,6 @@ async sendUserVerification(user: User, code: string) {
   }
 
 }
+
 
 
