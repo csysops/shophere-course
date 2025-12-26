@@ -30,8 +30,8 @@ export class EmailService {
     // });
     await this.resend.emails.send({
           from: 'Acme <onboarding@resend.dev>',
-          to: ['dat.pt204@gmail.com'],
-          subject: 'hello world',
+          to: [user.email],
+          subject: 'Verify your email',
           html: '<p>it works!</p>',
           });
     console.log('✅ Verification email sent');
