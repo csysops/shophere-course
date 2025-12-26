@@ -63,23 +63,24 @@ export class AuthService {
    * RESEND VERIFICATION EMAIL
    * ---------------------------------------- */
   async resendVerification(email: string) {
+    console.log('🚀 [Controller] resend-verification hit with:', email);
     const user = await this.usersService.findOneByEmail(email);
 
     if (!user) {
       throw new BadRequestException('User not found');
     }
-
+    console.log("1111");
     if (user.isVerified) {
       throw new BadRequestException('Email already verified');
     }
-
+    console.log("2222");
     const verificationCode = uuidv4();
 
     await this.prisma.user.update({
       where: { id: user.id },
       data: { verificationCode },
     });
-
+    console.log("3333");
     await this.emailService.sendUserVerification(user, verificationCode);
 
     return { message: 'Verification email sent successfully' };
@@ -227,3 +228,4 @@ export class AuthService {
     return { message: 'Password reset successfully' };
   }
 }
+
