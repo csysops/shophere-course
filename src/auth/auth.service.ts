@@ -80,9 +80,10 @@ export class AuthService {
       where: { id: user.id },
       data: { verificationCode },
     });
-    console.log("3333");
-    await this.emailService.sendUserVerification(user, verificationCode);
+    console.log('EmailService instance:', this.emailService);
 
+    await this.emailService.sendUserVerification(user, verificationCode);
+    
     return { message: 'Verification email sent successfully' };
   }
 
@@ -228,4 +229,5 @@ export class AuthService {
     return { message: 'Password reset successfully' };
   }
 }
+
 
