@@ -9,6 +9,12 @@ export class EmailService {
   async sendUserVerification(user: User, code: string) {
     console.log('📨 [EmailService] sendUserVerification called');
   console.log('📨 To:', user.email);
+    import { existsSync } from 'fs';
+
+  console.log(
+    '📁 Template path exists:',
+    existsSync(join(__dirname, '..', 'templates', 'verify.hbs'))
+  );
     await this.mailerService.sendMail({
       to: user.email,
       subject: 'Verify your email',
@@ -33,3 +39,4 @@ export class EmailService {
     });
   }
 }
+
