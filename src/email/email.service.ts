@@ -1,63 +1,45 @@
-import { MailerService } from '@nestjs-modules/mailer';
+// src/email/email.service.ts
 import { Injectable } from '@nestjs/common';
+import { Resend } from 'resend';
 import { ConfigService } from '@nestjs/config';
 import { User } from '@prisma/client';
 
 @Injectable()
 export class EmailService {
-  constructor(
-    private mailerService: MailerService,
-    private configService: ConfigService,
-  ) {}
+  private resend: Resend;
 
-  private getBaseUrl(): string {
-    // Sử dụng BASE_URL từ env, nếu không có thì tự động detect
-    const baseUrl = this.configService.get<string>('BASE_URL');
-
-    if (baseUrl) {
-      return baseUrl;
-    }
-
-    // Auto-detect cho production (Render, Heroku, etc.)
-    // Render chỉ cho phép HTTP trên port 80/443
-    if (process.env.NODE_ENV === 'production') {
-      return 'https://your-render-app-url.onrender.com'; // Thay thế bằng URL thực tế của bạn
-    }
-
-    // Development fallback
-    const port = process.env.PORT || '3000';
-    return `http://localhost:${port}`;
+  constructor(private configService: ConfigService) {
+    this.resend = new Resend(
+      this.configService.get<string>('RESEND_API_KEY'),
+    );
   }
 
-  // Gửi email xác thực
   async sendUserVerification(user: User, code: string) {
-    const baseUrl = this.getBaseUrl();
-
-    await this.mailerService.sendMail({
+    await this.resend.emails.send({
+      from: 'ShopSphere <noreply@csysops.dev>',
       to: user.email,
-      subject: 'Chào mừng đến ShopSphere! Xác thực Email của bạn',
-      template: './verify',
-      context: {
-        name: user.email,
-        activationCode: code,
-        baseUrl: baseUrl,
-      },
+      subject: 'Verify your email',
+      html: `
+        <h2>Welcome to ShopSphere</h2>
+        <p>Your verification code:</p>
+        <h3>${code}</h3>
+        <p>Or click the link:</p>
+        <a href="https://shophere-frontend.onrender.com/verify?code=${code}">
+          Verify Email
+        </a>
+      `,
     });
   }
 
-  // Gửi email đặt lại mật khẩu
   async sendPasswordReset(user: User, resetCode: string) {
-    const baseUrl = this.getBaseUrl();
-
-    await this.mailerService.sendMail({
+    await this.resend.emails.send({
+      from: 'ShopSphere <noreply@csysops.dev>',
       to: user.email,
-      subject: 'Đặt lại mật khẩu ShopSphere',
-      template: './reset-password',
-      context: {
-        name: user.email,
-        resetCode: resetCode,
-        baseUrl: baseUrl,
-      },
+      subject: 'Reset your password',
+      html: `
+        <p>Reset code:</p>
+        <h3>${resetCode}</h3>
+      `,
     });
   }
 }
