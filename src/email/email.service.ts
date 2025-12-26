@@ -27,15 +27,13 @@ export class EmailService {
     //       Verify Email
     //     </a>
     //   `,
-      await resend.emails.send({
+    // });
+    await resend.emails.send({
           from: 'Acme <onboarding@resend.dev>',
           to: ['dat.pt204@gmail.com'],
           subject: 'hello world',
           html: '<p>it works!</p>',
           });
-    
-    });
-
     console.log('✅ Verification email sent');
   }
 
