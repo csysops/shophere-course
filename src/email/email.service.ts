@@ -1,17 +1,18 @@
+// src/email/email.service.ts
 import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
+import sgMail from '@sendgrid/mail';
 import { User } from '@prisma/client';
-import * as sgMail from '@sendgrid/mail';
 
 @Injectable()
 export class EmailService {
   private readonly logger = new Logger(EmailService.name);
 
-  constructor(private configService: ConfigService) {
+  constructor(private readonly configService: ConfigService) {
     const apiKey = this.configService.get<string>('SENDGRID_API_KEY');
 
     if (!apiKey) {
-      throw new Error('SENDGRID_API_KEY is not set');
+      throw new Error('SENDGRID_API_KEY is not defined');
     }
 
     sgMail.setApiKey(apiKey);
