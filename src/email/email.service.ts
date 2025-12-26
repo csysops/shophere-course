@@ -9,36 +9,10 @@ export class EmailService {
   constructor(private mailerService: MailerService) {}
 
   // Gửi email xác thực
-//   async sendUserVerification(user: User, code: string) {
-//   console.log('📨 [EmailService] sendUserVerification called');
-//   console.log('📨 To:', user.email);
+  async sendUserVerification(user: User, code: string) {
+  console.log('📨 [EmailService] sendUserVerification called');
+  console.log('📨 To:', user.email);
   
-//   await this.mailerService.sendMail({
-//     to: user.email,
-//     subject: 'Verify email',
-//     template: './verify',
-//     context: {
-//       name: user.email,
-//       activationCode: code,
-//     },
-//   });
-
-//   console.log('📨 MailerService.sendMail finished');
-// }
-
-async sendUserVerification(user: User, code: string) {
-  const pathsToCheck = [
-    join(process.cwd(), 'dist', 'email', 'templates', 'verify.hbs'),
-    join(process.cwd(), 'templates', 'verify.hbs'),
-    join(process.cwd(), 'dist', 'templates', 'verify.hbs'),
-  ];
-
-  console.log('🔍 CWD:', process.cwd());
-
-  for (const p of pathsToCheck) {
-    console.log(`🔍 Checking ${p} →`, fs.existsSync(p));
-  }
-
   await this.mailerService.sendMail({
     to: user.email,
     subject: 'Verify email',
@@ -49,8 +23,34 @@ async sendUserVerification(user: User, code: string) {
     },
   });
 
-  console.log('✅ sendMail finished');
+  console.log('📨 MailerService.sendMail finished');
 }
+
+// async sendUserVerification(user: User, code: string) {
+//   const pathsToCheck = [
+//     join(process.cwd(), 'dist', 'email', 'templates', 'verify.hbs'),
+//     join(process.cwd(), 'templates', 'verify.hbs'),
+//     join(process.cwd(), 'dist', 'templates', 'verify.hbs'),
+//   ];
+
+//   console.log('🔍 CWD:', process.cwd());
+
+//   for (const p of pathsToCheck) {
+//     console.log(`🔍 Checking ${p} →`, fs.existsSync(p));
+//   }
+
+//   await this.mailerService.sendMail({
+//     to: user.email,
+//     subject: 'Verify email',
+//     template: 'verify',
+//     context: {
+//       name: user.email,
+//       activationCode: code,
+//     },
+//   });
+
+//   console.log('✅ sendMail finished');
+// }
   // Gửi email đặt lại mật khẩu
   async sendPasswordReset(user: User, resetCode: string) {
     await this.mailerService.sendMail({
@@ -65,6 +65,7 @@ async sendUserVerification(user: User, code: string) {
   }
 
 }
+
 
 
 
