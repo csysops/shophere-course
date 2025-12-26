@@ -1,42 +1,48 @@
-import { MailerService } from '@nestjs-modules/mailer';
 import { Injectable } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
+import { Resend } from 'resend';
 import { User } from '@prisma/client';
-import { join } from 'path';
-import { existsSync } from 'fs';
 
 @Injectable()
 export class EmailService {
-  constructor(private readonly mailerService: MailerService) {}
+  private resend: Resend;
+
+  constructor(private configService: ConfigService) {
+    this.resend = new Resend(
+      this.configService.get<string>('RESEND_API_KEY')!,
+    );
+  }
 
   async sendUserVerification(user: User, code: string) {
-    console.log('📨 [EmailService] sendUserVerification called');
-  console.log('📨 To:', user.email);
-   
+    console.log('📨 Sending verification email via Resend');
 
-    await this.mailerService.sendMail({
+    await this.resend.emails.send({
+      from: this.configService.get('EMAIL_FROM')!,
       to: user.email,
       subject: 'Verify your email',
-      template: 'verify', // ✅ NO ./ and NO extension
-      context: {
-        name: user.email,
-        activationCode: code,
-      },
+      html: `
+        <h2>Welcome to ShopSphere</h2>
+        <p>Click the link below to verify your email:</p>
+        <a href="https://shophere-frontend.onrender.com/verify-email?code=${code}">
+          Verify Email
+        </a>
+      `,
     });
-    console.log('📨 MailerService.sendMail finished');
+
+    console.log('✅ Verification email sent');
   }
 
   async sendPasswordReset(user: User, resetCode: string) {
-    await this.mailerService.sendMail({
+    await this.resend.emails.send({
+      from: this.configService.get('EMAIL_FROM')!,
       to: user.email,
       subject: 'Reset your password',
-      template: 'reset-password',
-      context: {
-        name: user.email,
-        resetCode,
-      },
+      html: `
+        <p>Reset your password:</p>
+        <a href="https://shophere-frontend.onrender.com/reset-password?code=${resetCode}">
+          Reset Password
+        </a>
+      `,
     });
   }
 }
-
-
-
