@@ -13,7 +13,6 @@ export class EmailService {
   console.log('📨 To:', user.email);
    
 
-  console.log('📁 Template path exists:', existsSync(join(__dirname, '..', 'templates', 'verify.hbs')));
     await this.mailerService.sendMail({
       to: user.email,
       subject: 'Verify your email',
