@@ -1,6 +1,7 @@
+// src/email/email.service.ts
 import { Injectable } from '@nestjs/common';
-import { ConfigService } from '@nestjs/config';
 import { Resend } from 'resend';
+import { ConfigService } from '@nestjs/config';
 import { User } from '@prisma/client';
 
 @Injectable()
@@ -9,47 +10,36 @@ export class EmailService {
 
   constructor(private configService: ConfigService) {
     this.resend = new Resend(
-      this.configService.get<string>('RESEND_API_KEY')!,
+      this.configService.get<string>('RESEND_API_KEY'),
     );
   }
 
   async sendUserVerification(user: User, code: string) {
-    console.log('📨 Sending verification email via Resend');
-
-    // await this.resend.emails.send({
-    //   from: this.configService.get('EMAIL_FROM')!,
-    //   to: user.email,
-    //   subject: 'Verify your email',
-    //   html: `
-    //     <h2>Welcome to ShopSphere</h2>
-    //     <p>Click the link below to verify your email:</p>
-    //     <a href="https://shophere-frontend.onrender.com/verify-email?code=${code}">
-    //       Verify Email
-    //     </a>
-    //   `,
-    // });
     await this.resend.emails.send({
-          from: 'Acme <onboarding@resend.dev>',
-          to: ['phamtan8312@gmail.com'],
-          subject: 'Verify your email',
-          html: '<p>it works!</p>',
-          });
-    console.log('✅ Verification email sent');
-  }
-
-  async sendPasswordReset(user: User, resetCode: string) {
-    await this.resend.emails.send({
-      from: this.configService.get('EMAIL_FROM')!,
+      from: 'ShopSphere <onboarding@resend.dev>',
       to: user.email,
-      subject: 'Reset your password',
+      subject: 'Verify your email',
       html: `
-        <p>Reset your password:</p>
-        <a href="https://shophere-frontend.onrender.com/reset-password?code=${resetCode}">
-          Reset Password
+        <h2>Welcome to ShopSphere</h2>
+        <p>Your verification code:</p>
+        <h3>${code}</h3>
+        <p>Or click the link:</p>
+        <a href="https://shophere-frontend.onrender.com/verify?code=${code}">
+          Verify Email
         </a>
       `,
     });
   }
+
+  async sendPasswordReset(user: User, resetCode: string) {
+    await this.resend.emails.send({
+      from: 'ShopSphere <onboarding@resend.dev>',
+      to: user.email,
+      subject: 'Reset your password',
+      html: `
+        <p>Reset code:</p>
+        <h3>${resetCode}</h3>
+      `,
+    });
+  }
 }
-
-
