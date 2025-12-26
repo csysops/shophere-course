@@ -70,7 +70,7 @@ import { HealthModule } from './health/health.module';
           secure: false,
           auth: {
             user: configService.get<string>('EMAIL_USER'),
-            pass: 'quce kcjc artc arif ',
+            pass: configService.get<string>('EMAIL_PASSWORD'),
           },
         },
         defaults: {
@@ -81,6 +81,7 @@ import { HealthModule } from './health/health.module';
           adapter: new HandlebarsAdapter(),
           options: { strict: true },
         },
+        
       }),
     }),
 
