@@ -1,29 +1,34 @@
-// src/email/email.service.ts
-import { Injectable } from '@nestjs/common';
-import { Resend } from 'resend';
+import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { User } from '@prisma/client';
+import * as sgMail from '@sendgrid/mail';
 
 @Injectable()
 export class EmailService {
-  private resend: Resend;
+  private readonly logger = new Logger(EmailService.name);
 
   constructor(private configService: ConfigService) {
-    this.resend = new Resend(
-      this.configService.get<string>('RESEND_API_KEY'),
-    );
+    const apiKey = this.configService.get<string>('SENDGRID_API_KEY');
+
+    if (!apiKey) {
+      throw new Error('SENDGRID_API_KEY is not set');
+    }
+
+    sgMail.setApiKey(apiKey);
   }
 
   async sendUserVerification(user: User, code: string) {
-    await this.resend.emails.send({
-      from: 'ShopSphere <noreply@csysops.dev>',
+    this.logger.log(`📨 Sending verification email to ${user.email}`);
+
+    await sgMail.send({
       to: user.email,
+      from: this.configService.get<string>('SENDGRID_FROM_EMAIL')!,
       subject: 'Verify your email',
       html: `
         <h2>Welcome to ShopSphere</h2>
         <p>Your verification code:</p>
         <h3>${code}</h3>
-        <p>Or click the link:</p>
+        <p>Or click the link below:</p>
         <a href="https://shophere-frontend.onrender.com/verify?code=${code}">
           Verify Email
         </a>
@@ -32,13 +37,16 @@ export class EmailService {
   }
 
   async sendPasswordReset(user: User, resetCode: string) {
-    await this.resend.emails.send({
-      from: 'ShopSphere <noreply@csysops.dev>',
+    this.logger.log(`📨 Sending password reset email to ${user.email}`);
+
+    await sgMail.send({
       to: user.email,
+      from: this.configService.get<string>('SENDGRID_FROM_EMAIL')!,
       subject: 'Reset your password',
       html: `
-        <p>Reset code:</p>
+        <p>You requested a password reset.</p>
         <h3>${resetCode}</h3>
+        <p>If you didn’t request this, ignore this email.</p>
       `,
     });
   }
